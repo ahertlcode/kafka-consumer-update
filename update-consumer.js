@@ -1,18 +1,36 @@
-var Kafka = require('node-rdkafka');
+var { Kafka, logLevel } = require('kafkajs');
 var http = require('axios');
+var fs = require("fs");
 
 var baseurl = "http://localhost:3000/";
 
-/*var consumer = new Kafka.KafkaConsumer({
-  'group.id': 'test-consumer-group',
-  'metadata.broker.list': 'localhost:9092',
-}, {});*/
+var _kafka = new Kafka({
+  clientId: 'testapp',
+  brokers: ['kafka1:9092'],
+  logLevel: logLevel.INFO
+});
 
-var consumer = new Kafka.KafkaConsumer({
-  'group.id': 'consumer-group',
-  'metadata.broker.list': '172.105.73.219:9092',
-}, {});
+var consumer = _kafka.consumer({groupId: 'test-consumer-group'});
 
+var run = async () => {
+  await consumer.connect();
+  await consumer.subscribe(['pos-reversal.notification.event']);
+  await consumer.run({
+    eachMessage: async ([topic, partition, message]) => {
+      const prefix = `${new Date()} - ${topic}[${partition} | ${message}] / ${message.timestamp}`;
+      const ddata = `- ${prefix} ${message.key}#${message.value}\n`;
+      fs.writeFile('testdata.txt', ddata, { flag: 'a+' }, err => {});
+    },
+  });
+}
+
+run().catch(e => {
+  const errdata = `${new Date()} - [testapp] ${e.message}\n`;
+  fs.writeFile('errdata.txt', errdata, { flag: 'a+' }, err => {});
+
+});
+
+/*
 
 var updateConsumer = consumer.connect();
 
@@ -32,3 +50,4 @@ updateConsumer.on('ready', () => {
       console.log(err);
     });
 });
+*/
