@@ -14,9 +14,9 @@ var consumer = _kafka.consumer({groupId: 'test-consumer-group'});
 
 var run = async () => {
   await consumer.connect();
-  await consumer.subscribe(['pos-reversal.notification.event']);
+  await consumer.subscribe({topic: 'pos-reversal.notification.event'});
   await consumer.run({
-    eachMessage: async ([topic, partition, message]) => {
+    eachMessage: async ({topic, partition, message}) => {
       const prefix = `${new Date()} - ${topic}[${partition} | ${message}] / ${message.timestamp}`;
       const ddata = `- ${prefix} ${message.key}#${message.value}\n`;
       // fs.writeFile('testdata.txt', ddata, { flag: 'a+' }, err => {});
@@ -24,6 +24,9 @@ var run = async () => {
     },
   });
 }
+
+// setInterval(() => {
+// }, 10000);
 
 run().catch(e => {
   const errdata = `${new Date()} - [testapp] ${e.message}\n`;
