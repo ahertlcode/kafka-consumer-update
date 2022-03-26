@@ -1,4 +1,4 @@
-FROM node:14.16.0
+FROM node:14-alpine
 # Create app directory
 WORKDIR /usr/src/app
 COPY package*.json ./
